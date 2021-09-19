@@ -24,7 +24,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/null">
 <meta property="article:published_time" content="2021-09-18T18:35:11.000Z">
-<meta property="article:modified_time" content="2021-09-19T06:44:06.315Z">
+<meta property="article:modified_time" content="2021-09-19T13:36:16.925Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="ssh">
 <meta name="twitter:card" content="summary">
@@ -173,7 +173,7 @@
                     <i class="fa fa-edit"></i> 
                     
                     
-                        ~3.25K
+                        1124
                     
                     字
                 </li>
@@ -182,7 +182,7 @@
         </header>
         <div class="kratos-post-content">
             <div id="expire-alert" class="alert alert-warning hidden" role="alert">
-                本文最后编辑于 <time datetime="1632033846315"></time> 前，其中的内容可能需要更新。
+                本文最后编辑于 <time datetime="1632058576925"></time> 前，其中的内容可能需要更新。
             </div>
             
             <hr />
@@ -197,50 +197,6 @@
 <blockquote>
 <p>Peter 主教发现自己在一个封闭的矩形房间内，四面都是墙壁，而地板上又铺满了黑白交替矩形的瓷砖。Peter 主教突然开始头疼——大概应为之前喝了太多的酒——于是开始随意的走动起来。准确的说，他是按照对角走位的方式，就好像国际象棋上的主教一样。当他遇到墙壁的时候，如果他踩着黑瓷砖，就走向白瓷砖，如果踩着白瓷砖就走向黑瓷砖。每次动作之后，他都会在瓷砖上放置一个硬币，记录他踩过这里一次。走了 64 步之后，用完了所有的硬币，Peter 突然醒了过来。多么奇怪的梦！</p>
 </blockquote>
-<h1 id="如何生成"><a href="#如何生成" class="headerlink" title="如何生成"></a>如何生成</h1><p>看了上面的故事，来说一说 randomart image 具体是如何生成的。</p>
-<p>我们知道 OpenSSH Key 的指纹是一个 MD5 校验和，同事可以用 16 进制表示出来，类似这样：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fc:94:b0:c1:e5:b0:98:7c:58:43:99:76:97:ee:9f:b7</span><br></pre></td></tr></table></figure>
-
-<p>当然，也可以用二进制来表示。</p>
-<p>于是按照 Peter 的走路方式，我们定义如下走位：</p>
-<ol>
-<li>“00” 表示向西北（左上）移动</li>
-<li>“01” 表示向东北（右上）移动</li>
-<li>“10” 表示向西南（右下）移动</li>
-<li>“11” 表示向东南（坐下）移动</li>
-</ol>
-<p>就像这样：</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-01.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-01.jpg)</p>
-<p>我们来画个图，用于表示黑白相间的瓷砖房，并每个格子上都编号，一开始的时候，Peter 在房间的中间：</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-02.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-02.jpg)</p>
-<p>中间的 76 号就是 Peter 最初的位置。我们可以把 Peter 所在的格子表示为：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// 用坐标系表示</span><br><span class="line">P = x + 17y</span><br></pre></td></tr></table></figure>
-
-<p>那么，从 76 号向四个方向移动 P 值变化：</p>
-<ol>
-<li>“00” 进入 58 号格子，数值 -18</li>
-<li>“01” 进入 60 号格子，数值 -16</li>
-<li>“10” 进入 92 号格子，数值 +16</li>
-<li>“11” 进入 94 号格子，数值 +18</li>
-</ol>
-<p>对于碰墙的情况，做如下规则：</p>
-<p>将房间的每个格子做分类，四个角分别为 a、b、c、d，靠着四面墙的分别为 T、R、B、L，其余部分为 M。</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-03.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-03.jpg)</p>
-<p>对于每一种情况：</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-04.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-04.jpg)</p>
-<p>解释一下上图，以 a 栏为例，如果下一步像左上移动，但是继续走就撞墙了，所以实际移动为 <code>不移动</code>；如果向右上移动，实际移动为 <code>向右移动</code>；如果向左下移动，实际移动为 <code>向下移动</code>；如果像右下移动，实际移动就是 <code>向下移动</code>。</p>
-<p>那么 Peter 投掷硬币是怎样体现的？实际上，是做如下统计，每个格子，如果没有被踩过，则不做表示；如果被踩过一次，记录为 <code>.</code>；如果被踩了两次，记录为 <code>o</code>…具体如下：</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-05.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-05.jpg)</p>
-<p>比较特别的是 <code>S</code> 和 <code>E</code>，<code>S</code> 和 <code>E</code> 分别标记起始和终止位置（所以 76 号格子永远是 S）。</p>
-<p>实际操作一下，对于 <code>fc:94:b0:c1:e5:b0:98:7c:58:43:99:76:97:ee:9f:b7</code>，我们将其转换成二进制：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">11010100:11010100:11111101:11001010:...:00111011:11100100:10111010:11101001</span><br></pre></td></tr></table></figure>
-
-<p>将二进制二位一组，按照下表做好走路的顺序：</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-06.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-06.jpg)</p>
-<p>按照上面的顺序，踩到格子的顺序如下。</p>
-<p>76, 58, 76, 94, 112, 94, 78, 62, 78, 60, 42, 60, 76, 60, 42, 24, 42, 26, 10, 26, 44, 26, 8, 26, 42, 24, 40, 24, 40, 22, 40, 58, 42, 24, 40, 24, 8, 26, 8, 7, 8, 9, 25, 9, 25, 41, 25, 43, 27, 45, 29, 13, 29, 45, 63, 79, 97, 115, 133, 117, 133, 151, 135, 152, 151</p>
-<p>最后做成统计，填好图，成品就如下。是不是就和我们平常在控制台得到的输出一致？</p>
-<p>[<img src="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen%20%E4%B8%AD%E7%94%9F%E6%88%90%E7%9A%84%20randomart%20image%20%E6%98%AF%E4%BB%80%E4%B9%88-07.jpg" alt="img">](<a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen">https://raw.githubusercontent.com/summertian4/Images/master/blog/blog_ssh-keygen</a> 中生成的 randomart image 是什么-07.jpg)</p>
 <h1 id="相关"><a href="#相关" class="headerlink" title="相关"></a>相关</h1><blockquote>
 <p><a target="_blank" rel="noopener" href="https://superuser.com/questions/22535/what-is-randomart-produced-by-ssh-keygen">What is randomart produced by ssh-keygen?</a><br><a target="_blank" rel="noopener" href="https://pthree.org/2013/05/30/openssh-keys-and-the-drunken-bishop/">OpenSSH Keys and The Drunken Bishop</a><br><a target="_blank" rel="noopener" href="http://aarontoponce.org/drunken_bishop.pdf">The drunken bishop: An analysis of the OpenSSH<br>fingerprint visualization algorithm</a></p>
 </blockquote>
